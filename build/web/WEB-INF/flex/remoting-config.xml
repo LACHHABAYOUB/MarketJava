@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="remoting-service" 
+         class="flex.messaging.services.RemotingService">
+
+    <adapters>
+        <adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true"/>
+    </adapters>
+
+    <default-channels>
+        <channel ref="java-amf"/>
+    </default-channels>
+
+    <destination id="CodigosBarrasService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.CodigosBarrasService</source>
+        </properties>
+    </destination>
+    <destination id="VendedorService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.VendedorService</source>
+        </properties>
+    </destination>
+    <destination id="MercadoService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.MercadoService</source>
+        </properties>
+    </destination>
+    <destination id="FilialService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.FilialService</source>
+        </properties>
+    </destination>
+    <destination id="FornecedorService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.FornecedorService</source>
+        </properties>
+    </destination>
+    <destination id="UsuarioService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.UsuarioService</source>
+        </properties>
+    </destination>
+    <destination id="LoginService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.LoginService</source>
+        </properties>
+    </destination>
+    <destination id="CadastraoService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.CadastraoService</source>
+        </properties>
+    </destination>
+    <destination id="MercFornVendService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.MercFornVendService</source>
+        </properties>
+    </destination>
+    <destination id="ItensCotacaoService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.ItensCotacaoService</source>
+        </properties>
+    </destination>
+    <destination id="CotacaoService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.CotacaoService</source>
+        </properties>
+    </destination>
+    <destination id="PedidoService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.PedidoService</source>
+        </properties>
+    </destination>
+    <destination id="LogService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.LogService</source>
+        </properties>
+    </destination>
+    <destination id="ParametroService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.ParametroService</source>
+        </properties>
+    </destination>
+    <destination id="MensagemService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.MensagemService</source>
+        </properties>
+    </destination>
+    <destination id="ImagemBannerService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.ImagemBannerService</source>
+        </properties>
+    </destination>
+    <destination id="RecuperaSenhaService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.RecuperaSenhaService</source>
+        </properties>
+    </destination>
+    <destination id="UtilitarioService">
+        <properties>
+            <source>br.com.sgsistemas.cotacao.cotacaoweb.services.UtilitarioService</source>
+        </properties>
+    </destination>
+</service>

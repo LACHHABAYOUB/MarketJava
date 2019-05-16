@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+    <description>Projeto Cotacao</description>
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+    <display-name>CotacaoWeb</display-name>
+    <!-- Http Flex Session attribute and binding listener support -->
+    <listener>
+        <listener-class>flex.messaging.HttpFlexSession</listener-class>
+    </listener>
+    <!-- MessageBroker Servlet -->
+    <listener>
+        <listener-class>br.com.sgsistemas.cotacao.cotacaoweb.utils.CotacaoContextListener</listener-class>
+    </listener>
+    <context-param>
+        <param-name>ipServerBanco</param-name>
+        <param-value>192.168.1.250</param-value>
+    </context-param>
+    <context-param>
+        <param-name>portaServerBanco</param-name>
+        <param-value>3306</param-value>
+    </context-param>
+    <context-param>
+        <param-name>databaseServerBanco</param-name>
+        <param-value>cotacao</param-value>
+    </context-param>
+    <context-param>
+        <param-name>usuarioServerBanco</param-name>
+        <param-value>root</param-value>
+    </context-param>
+    <context-param>
+        <param-name>senhaServerBanco</param-name>
+        <param-value>senha1</param-value>
+    </context-param>
+    <!-- Http Flex Session attribute and binding listener support -->
+    <!-- MessageBroker Servlet -->
+    <servlet>
+        <display-name>MessageBrokerServlet</display-name>
+        <servlet-name>MessageBrokerServlet</servlet-name>
+        <servlet-class>flex.messaging.MessageBrokerServlet</servlet-class>
+        <init-param>
+            <param-name>services.configuration.file</param-name>
+            <param-value>/WEB-INF/flex/services-config.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MessageBrokerServlet</servlet-name>
+        <url-pattern>/messagebroker/*</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>ServletRelatorios</servlet-name>
+        <servlet-class>br.com.sgsistemas.cotacao.cotacaoweb.servlets.ServletRelatorios</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ServletRelatorios</servlet-name>
+        <url-pattern>/servlet/ServletRelatorios</url-pattern>
+    </servlet-mapping>
+    <welcome-file-list>
+        <welcome-file>Main.html</welcome-file>
+    </welcome-file-list>
+</web-app>

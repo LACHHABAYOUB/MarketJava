@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:flexmdi="http://flexmdi.googlecode.com/" width="100%" height="100%" layout="absolute" creationComplete="init()"
+				applicationComplete="main_applicationCompleteHandler(event)" creationPolicy="all" xmlns:components="components.*">
+	<mx:Script>
+		<![CDATA[
+			import bean.Fornecedor;
+			import bean.Mensagem;
+			import bean.Mercado;
+			import bean.Parametro;
+			import bean.Usuario;
+			import bean.UsuarioLogado;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Menu;
+			import mx.controls.menuClasses.MenuBarItem;
+			import mx.events.FlexEvent;
+			import mx.events.MenuEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			
+			import utils.Filtros;
+			import utils.Functions;
+			import utils.Listagem;
+			import utils.ObjetoRemoto;
+			
+			public static var usuarioLogado: UsuarioLogado;
+			
+			[Bindable]
+			public var arrayMercados: ArrayCollection;
+			[Bindable]
+			private var _arrayImagesBanner: ArrayCollection;
+			
+			public var usuarioAdm: Usuario = new Usuario();
+			
+			private var MercadoService: ObjetoRemoto;
+			
+			private var timerBanner: Timer;
+			[Bindable]
+			public static var mensagem: Mensagem;
+			private var ImgBannerService: ObjetoRemoto;
+			
+			public static const VERSAO: String = "20181011BE";
+			public static const BUILD: String = "v0.1";
+			
+			private function init(): void {
+				Alert.yesLabel = "Sim";
+				Alert.noLabel = "Não";
+				
+				this.loginSistema();
+			}
+			
+			protected function main_applicationCompleteHandler( event: FlexEvent ): void {
+				//set focus to this app using javascript
+				if( ExternalInterface.available ) {
+					ExternalInterface.call( "eval", "window.document.getElementById('" + ExternalInterface.objectID + "').tabIndex=0" );
+					ExternalInterface.call( "eval", "window.document.getElementById('" + ExternalInterface.objectID + "').focus()" );
+				}
+			}
+			
+			public function loginSistema(): void {
+				lblVersao.text = "Versão: " + VERSAO;
+				var login: FrmLogin = FrmLogin( PopUpManager.createPopUp( this, FrmLogin, true ));
+				this.cvPrincipal.stylesInitialized();
+				login.main = this;
+				login.x = (( this.width / 2 ) - ( login.width / 2 ));
+				login.y = (( this.height / 2 ) - ( login.height / 2 ));
+				this.mbMenus.addEventListener( MouseEvent.CLICK, this.MenuClick );
+			}
+			
+			public function centerList( window: MDIWindowSGList ): void {
+				if( this.width > 0 && this.height > 0 ) {
+					window.x = Math.round( this.width / 2 - window.width / 2 );
+					window.y = Math.round( this.height / 2 - window.height / 2 );
+				}
+			}
+			
+			public function centerDao( window: MDIWindowSGDao ): void {
+				if( this.width > 0 && this.height > 0 ) {
+					window.x = Math.round( this.width / 2 - window.width / 2 );
+					window.y = Math.round( this.height / 2 - window.height / 2 );
+				}
+			}
+			
+			public function Logout(): void {
+				var loginService: ObjetoRemoto = new ObjetoRemoto( null, "LoginService" );
+				loginService.getOperation( "LogOut" ).send();
+				
+				lblUsuario.text = "";
+				lblMercado.visible = false;
+				cbxMercado.visible = false;
+				Main.usuarioLogado = null;
+				mdiCanvas.windowManager.removeAll();
+				this.loginSistema();
+				//Retirado pois da erro de null no item.data do menu. Aparentemente desnecessário pois o menu é recriado ao logar.
+//				mbMenus.dataProvider = menuXML;
+//				mbMenus.selectedIndex = 0;
+			}
+			
+			private function AbreItem( e: MenuEvent ): void {
+				var MDISGList: MDIWindowSGList;
+				var MDISG: MDIWindowSG;
+				
+				if( e.item.@data == "mercado" ) {
+					MDISGList = new FrmMercadoLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "fornecedor" ) {
+					MDISGList = new FrmFornecedorLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "filial" ) {
+					MDISGList = new FrmFilialLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "vendedor" ) {
+					MDISGList = new FrmVendedorLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "vendedormercado" ) {
+					MDISGList = new FrmAtendVendMerc();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "cotacoes" ) {
+					MDISGList = new FrmCotacaoLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "pedidos" ) {
+					MDISGList = new FrmPedidoLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "usuarios" ) {
+					MDISGList = new FrmUsuarioLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "altsenha" ) {
+					MDISG = new FrmManutencaoSenha();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+					}
+				} else if( e.item.@data == "altsenhausuarios" ) {
+					MDISG = new FrmAlteraSenha();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+					}
+				} else if( e.item.@data == "logoperacoes" ) {
+					MDISGList = new FrmLogInfoLista();
+					
+					if( !Functions.existeTela( MDISGList.className )) {
+						MDISGList.canvas = mdiCanvas;
+						MDISGList.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISGList.main = this;
+						mdiCanvas.windowManager.add( MDISGList );
+						MDISGList.maximize();
+					}
+				} else if( e.item.@data == "parametros" ) {
+					MDISG = new FrmParametros();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+					}
+				} else if( e.item.@data == "statuscotacao" ) {
+					MDISG = new FrmImprimeStatusCotacao();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+						MDISG.maximize();
+					}
+				} else if( e.item.@data == "cotacaonaoganhos" ) {
+					MDISG = new FrmImprimeCotacaoNaoGanhos();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+						MDISG.maximize();
+					}
+				} else if( e.item.@data == "mensagem" ) {
+					MDISG = new FrmMensagem();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+						MDISG.maximize();
+					}
+				} else if( e.item.@data == "imagembanner" ) {
+					MDISG = new FrmImagemBanner();
+					
+					if( !Functions.existeTela( MDISG.className )) {
+						MDISG.canvas = mdiCanvas;
+						MDISG.setaPermissoes( Main.usuarioLogado.usuario.permissoes );
+						MDISG.main = this;
+						mdiCanvas.windowManager.add( MDISG );
+						MDISG.maximize();
+					}
+				}
+			}
+			
+			public function TrocarMercado(): void {
+				if( cbxMercado.selectedItem != null ) {
+					MercadoService = new ObjetoRemoto( ResultLocate, "LoginService" );
+					MercadoService.getOperation( "TrocarUsuario" ).send( cbxMercado.selectedItem.id );
+				}
+			}
+			
+			public function ResultLocate( e: ResultEvent ): void {
+				if( e.result != null ) {
+					var usuario: Usuario = Usuario( e.result );
+					Main.usuarioLogado.usuario = usuario;
+				} else {
+					Alert.show( "Não foi Carregar este Mercado!.", "** Atenção **" );
+					cbxMercado.selectedIndex = -1;
+				}
+			}
+			
+			private function MenuClick( event: MouseEvent ): void {
+				var menu: String = "nothing";
+				
+				try {
+					var xml: XML = XML( event.target.data );
+					menu = xml.attribute( "data" ).toString();
+				} catch( erro: Error ) {
+				}
+				
+				if( menu == "finacesso" ) {
+					Logout();
+				}
+			}
+			
+			private function ObjNomeComboMercado( item: Object ): String {
+				return item.clienteSgs + " - " + item.nome;
+			}
+			
+			public function listarImagensBannerSG(): void {
+				var params: Array = new Array();
+				var event: ValidationResultEvent = null;
+				var events: Array;
+				params[ 0 ] = "1"; // Código do registro de Associado da SG
+				
+				
+				ImgBannerService = new ObjetoRemoto( onResultListarImagensBannerSG, "ImagemBannerService" );
+				ImgBannerService.getOperation( "ListarNormal" ).send( Filtros.SEMFILTRO, params );
+			
+				//var remote: ObjetoRemoto = new ObjetoRemoto( onResultListarImagensBannerSG, "ImagemBannerService" );
+				//remote.getOperation( "Listar" ).send( Filtros.SEMFILTRO, params );
+			}
+			
+			protected function onResultListarImagensBannerSG( e: ResultEvent ): void {
+				if( e.result != null ) {
+					var arrayImagensRede: ArrayCollection =  e.result as ArrayCollection;
+					
+					if( arrayImagensRede.length > 0 ) {
+						
+						banner.visible = true;
+						_arrayImagesBanner = new ArrayCollection();
+						
+						for( var i: int = 0; i < arrayImagensRede.length; i++ ) {
+							var imagemObj: Object = new Object;
+							imagemObj.name = i + 1;
+							imagemObj.source = arrayImagensRede.getItemAt( i ).arquivo;
+							_arrayImagesBanner.addItem( imagemObj );
+						}
+					} else {
+						banner.visible = false;
+					}
+					
+					if( !timerBanner || !timerBanner.running ) {
+						timerBanner = new Timer( 6000 ); /* 1000ms == 1second */
+						timerBanner.addEventListener( TimerEvent.TIMER, onTimerBanner );
+						timerBanner.start();
+					}
+				} else {
+					banner.visible = false;
+				}
+			}
+			
+			private function onTimerBanner( evt: TimerEvent ): void {
+				var idx: uint = viewStackBanner.selectedIndex;
+				var max: uint = viewStackBanner.numChildren;
+				
+				var newIdx: uint = ++idx % max;
+				viewStackBanner.selectedIndex = newIdx;
+			}
+		]]>
+	</mx:Script>
+	<mx:Fade id="fadeIn" duration="700" alphaFrom="0.0" alphaTo="1.0" />
+	<mx:Fade id="fadeOut" duration="700" alphaFrom="1.0" alphaTo="0.0" />
+
+	<mx:XMLList id="menuInicialXML">
+		<menuitem label="Finalizar acesso" data="finacesso" />
+	</mx:XMLList>
+	<mx:XMLList id="menuXML"/>
+	<mx:Canvas width="100%" height="100%" id="cvWorkArea" horizontalCenter="0" verticalCenter="0">
+		<mx:MenuBar labelField="@label" itemClick="AbreItem(event)" id="mbMenus" dataProvider="{menuXML}" left="1" right="1" top="82" />
+		<mx:Canvas id="cvPrincipal" bottom="1" left="1" right="1" top="102">
+			<mx:VBox id="banner" width="100%" y="0" verticalGap="1" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="0" horizontalAlign="right" verticalAlign="middle"
+					 visible="false">
+				<mx:VBox top="86" width="100%" verticalGap="1" styleName="filled" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center" verticalAlign="middle">
+					<mx:ViewStack id="viewStackBanner" height="200" width="100%" backgroundAlpha="0">
+						<mx:Repeater id="repeaterImage" dataProvider="{_arrayImagesBanner}">
+							<mx:VBox backgroundAlpha="0" height="200" width="100%" label="{repeaterImage.currentItem.name}" horizontalAlign="center" verticalAlign="middle" showEffect="{fadeIn}"
+									 hideEffect="{fadeOut}" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+								<mx:Image source="{repeaterImage.currentItem.source}" maxHeight="200" horizontalAlign="center" />
+							</mx:VBox>
+						</mx:Repeater>
+					</mx:ViewStack>
+				</mx:VBox>
+
+				<mx:LinkBar dataProvider="viewStackBanner" />
+			</mx:VBox>
+			<mx:Canvas id="cvHelp" width="100%" height="100%" horizontalCenter="0" y="200" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+				<mx:Label x="10" y="6" text="Ajuda Rápida:" fontSize="12" color="#FFFFFF" fontWeight="bold" />
+
+				<mx:Image id="imgAdd" x="34" y="36" width="16" height="16" source="@Embed('../images/add.png')" toolTip="Adicionar Fornecedor" />
+				<mx:Image id="imgAlterar" x="34" y="66" width="16" height="16" source="@Embed('../images/alterar.png')" toolTip="Editar Registro" />
+				<mx:Image id="imgCheck" x="34" y="96" source="@Embed('../images/check.PNG')" toolTip="Selecionar o Registro" />
+				<mx:Image id="imgDelete" x="34" y="126" width="16" height="16" source="@Embed('../images/delete.png')" toolTip="Deletar Registro" />
+				<mx:Image id="imgVisualizar" x="34" y="156" width="16" height="16" source="@Embed('../images/visualizar.png')" toolTip="Visualizar listagem de Itens de Cotação" />
+
+				<mx:Label x="58" y="36" text="- Abre uma tela para adicionar um novo fornecedor" color="#FFFFFF" fontWeight="bold" fontSize="11" />
+				<mx:Label x="58" y="66" text="- Botão que refere-se a EDIÇÃO do registro" fontSize="11" color="#FFFFFF" fontWeight="bold" />
+				<mx:Label x="58" y="96" text="- Utiliza-se este botão para SELECIONAR um registro" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="58" y="126" text="- Botão que refere-se a EXCLUSÃO do registro" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="58" y="156" text="- Botão que refere-se à LISTAGEM de itens da cotação e possível edição" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="72" y="196" text="- Obs: Uma cotação está FECHADA somente quando existe um nome de usuário no campo &quot;FECHADO POR&quot;" fontWeight="bold" fontSize="11"
+						  color="#FFFFFF" />
+				<mx:Label x="58" y="246" text="- Para listar cotações vá em:" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="259" y="246" text="Movimentação -&gt; Cotações" color="#FCDB25" fontWeight="bold" fontSize="11" id="lblCotacoes" />
+				<mx:Label x="58" y="276" text="- Para listar pedidos vá em:" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="252" y="276" text="Movimentação -&gt; Pedidos" color="#FCDB25" fontWeight="bold" fontSize="11" id="lblPedidos" />
+				<mx:Label x="58" y="306" text="- Para alterar sua senha vá em:" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="278" y="306" text="Manutenção -&gt; Alterar Senha" color="#FCDB25" fontWeight="bold" fontSize="11" id="lblSenha" />
+				<mx:Label x="58" y="336" text="- Para consultar o status da cotação vá em:" fontWeight="bold" fontSize="11" color="#FFFFFF" />
+				<mx:Label x="355" y="336" text="Relatórios -&gt; Status da Cotação" fontWeight="bold" fontSize="11" color="#FCDB25" id="lblStatus" />
+
+			</mx:Canvas>
+		</mx:Canvas>
+		<mx:HBox id="cvImage" height="82" width="100%" backgroundImage="@Embed('../images/cabecalhofundo.png')" backgroundSize="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+				 paddingLeft="10" paddingRight="10">
+			<mx:HBox width="100%" height="100%" verticalGap="5" verticalAlign="bottom">
+				<mx:Image width="300" height="92" smoothBitmapContent="true" source="@Embed('../images/LogosSGSistemas.png')" />
+				<mx:Label id="lblVersao" text="Versão: xxxxxxxxxx" paddingBottom="10" fontSize="12" fontWeight="bold" color="#000000" />
+			</mx:HBox>
+			<mx:HBox height="100%" verticalGap="5" paddingBottom="10" verticalAlign="bottom">
+				<mx:VBox horizontalAlign="right">
+					<mx:Label text="Usuário Logado:" id="lblUsu" fontWeight="normal" fontSize="12" color="#000000" textAlign="right" textDecoration="underline" top="26" left="818" width="109" />
+					<mx:Label x="780" y="55" text="Selecione o Mercado:" id="lblMercado" fontWeight="bold" color="#000000" fontSize="12" textAlign="right" visible="false" />	
+				</mx:VBox>
+				<mx:VBox>
+					<mx:Label id="lblUsuario" fontWeight="bold" fontSize="12" color="#000000" top="26" left="930" right="10" />
+					<components:SGFilterComboBox x="930" y="55" id="cbxMercado" width="400" dataProvider="{arrayMercados}" change="TrocarMercado()" visible="false" labelFunction="ObjNomeComboMercado"/>		
+				</mx:VBox>
+			</mx:HBox>
+		</mx:HBox>
+	</mx:Canvas>
+	<flexmdi:MDICanvas id="mdiCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%" height="100%" backgroundColor="#FFFFFF" backgroundAlpha="0" y="102">
+	</flexmdi:MDICanvas>
+</mx:Application>
